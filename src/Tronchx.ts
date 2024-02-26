@@ -3,6 +3,7 @@ export interface Tronchx {
   name: string
   color: string
 }
+type PartialTronchxWithId = Partial<Tronchx> & { id: Tronchx['id'] }
 
 export const addTronchx = (
   tronchxs: Map<Tronchx['id'], Tronchx>,
@@ -17,15 +18,15 @@ export const addTronchx = (
   }
 }
 
-export const updateTronchx = (
+export const editTronchx = (
   tronchxs: Map<Tronchx['id'], Tronchx>,
-  tronchx: Tronchx
+  tronchx: PartialTronchxWithId
 ) => {
   const { id } = tronchx
   if (!tronchxs.has(id)) {
     return tronchxs
   } else {
     const updatedTronchxs = new Map(tronchxs)
-    return updatedTronchxs.set(id, tronchx)
+    return updatedTronchxs.set(id, { ...updatedTronchxs.get(id)!, ...tronchx })
   }
 }

@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
 import Tmi from 'tmi.js'
-import { Tronchx, addTronchx, updateTronchx } from './Tronchx'
+import { Modal } from './components/Modal'
+import { useTronchxs } from './hooks/useTronchxs'
+import { useState } from 'react'
+import { Tronchx } from './Tronchx'
 
 const client = new Tmi.Client({
   options: { debug: false },
@@ -8,57 +10,83 @@ const client = new Tmi.Client({
 })
 
 function App () {
-  const [tronchxsById, setTronchxsById] = useState<Map<Tronchx['id'], Tronchx>>(
-    () => new Map()
-  )
-  const tronchxs = [...tronchxsById.values()]
+  const { tronchxs, updateTronchx } = useTronchxs(client)
+  const [selectedTronchx, setSelectedTronchx] = useState<Tronchx | null>(null)
 
-  useEffect(() => {
-    client.on('message', async (channel, userState, message) => {
-      const { username, ['display-name']: displayName } = userState
+  const hasSelectedTroncho = !!selectedTronchx
 
-      if (!username) return
-      if (!displayName) return
+  const closeTronxhModal = () => {
+    setSelectedTronchx(null)
+  }
 
-      if (message === '!join') {
-        setTronchxsById(currentTronchxsById => {
-          return addTronchx(currentTronchxsById, {
-            id: username,
-            name: displayName,
-            color: '#FFFFFF'
-          })
-        })
-      } else if (message.startsWith('!color')) {
-        const color = message.slice(7)
-        setTronchxsById(currentTronchxsById => {
-          return updateTronchx(currentTronchxsById, {
-            id: username,
-            name: displayName,
-            color
-          })
-        })
-      }
-    })
-    client.connect()
-    return () => {
-      client.removeAllListeners('message')
-      client.disconnect()
-    }
-  }, [])
+  const handleTronchxModalClose = closeTronxhModal
 
   return (
-    <div className='w-screen h-min-screen flex justify-center items-center bg-[#050505] '>
-      <div className='grid grid-cols-6 gap-4 py-20'>
-        {tronchxs.map(tronchx => (
-          <div
-            style={{ backgroundColor: tronchx.color }}
-            className={`w-[150px] p-2 border-2 border-white h-[150px] flex items-center justify-center overflow-hidden`}
-          >
-            <span className='text-gray-800 truncate'>{tronchx.name}</span>
-          </div>
-        ))}
+    <>
+      <div className='w-screen h-min-screen h-full flex justify-center items-center bg-[#050505] '>
+        <div className='grid grid-cols-6 gap-4 py-20'>
+          {tronchxs.map(tronchx => (
+            <div
+              onClick={() => {
+                setSelectedTronchx(tronchx)
+              }}
+              style={{ background: tronchx.color }}
+              className={`w-[150px] p-2 border-2 border-white h-[150px] flex items-center justify-center overflow-hidden`}
+            >
+              <span className='text-gray-800 truncate'>{tronchx.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {hasSelectedTroncho && (
+        <Modal isOpen={hasSelectedTroncho} onClose={handleTronchxModalClose}>
+          <Modal.Header>
+            <h1>Editar tronchx</h1>
+          </Modal.Header>
+          <Modal.Content>
+            <form
+              id='edit-tronchx'
+              onSubmit={event => {
+                event.preventDefault()
+
+                const form = event.target
+
+                if (!(form instanceof HTMLFormElement)) return
+
+                if (!('tronchxName' in form.elements)) return
+                if (!(form.elements.tronchxName instanceof HTMLInputElement))
+                  return
+
+                const tronchxName = form.elements.tronchxName.value
+
+                updateTronchx({
+                  ...selectedTronchx,
+                  name: tronchxName
+                })
+                closeTronxhModal()
+              }}
+            >
+              <label>
+                Nombre
+                <input
+                  name='tronchxName'
+                  defaultValue={selectedTronchx.name}
+                  placeholder='Elige un nombre para el Tronchx'
+                  className='border-2 border-black'
+                  autoFocus
+                />
+              </label>
+            </form>
+          </Modal.Content>
+          <Modal.Footer>
+            <button type='submit' form='edit-tronchx'>
+              Save
+            </button>
+          </Modal.Footer>
+        </Modal>
+      )}
+    </>
   )
 }
 
