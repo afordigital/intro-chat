@@ -1,32 +1,38 @@
 export interface Tronchx {
-  id: string
-  name: string
-  color: string
+  id: string;
+  name: string;
+  color: string;
 }
-type PartialTronchxWithId = Partial<Tronchx> & { id: Tronchx['id'] }
+type PartialTronchxWithId = Partial<Tronchx> & { id: Tronchx["id"] };
 
 export const addTronchx = (
-  tronchxs: Map<Tronchx['id'], Tronchx>,
+  tronchxs: Map<Tronchx["id"], Tronchx>,
   tronchx: Tronchx
 ) => {
-  const { id } = tronchx
+  const { id } = tronchx;
   if (tronchxs.has(id)) {
-    return tronchxs
+    return tronchxs;
   } else {
-    const updatedTronchxs = new Map(tronchxs)
-    return updatedTronchxs.set(id, tronchx)
+    const updatedTronchxs = new Map(tronchxs);
+    return updatedTronchxs.set(id, tronchx);
   }
-}
+};
 
 export const editTronchx = (
-  tronchxs: Map<Tronchx['id'], Tronchx>,
+  tronchxs: Map<Tronchx["id"], Tronchx>,
   tronchx: PartialTronchxWithId
 ) => {
-  const { id } = tronchx
+  const { id } = tronchx;
   if (!tronchxs.has(id)) {
-    return tronchxs
+    return tronchxs;
   } else {
-    const updatedTronchxs = new Map(tronchxs)
-    return updatedTronchxs.set(id, { ...updatedTronchxs.get(id)!, ...tronchx })
+    const updatedTronchxs = new Map(tronchxs);
+    return updatedTronchxs.set(id, { ...updatedTronchxs.get(id)!, ...tronchx });
   }
-}
+};
+
+const updateName = (entity: { name: string }, updatedName: string) => {
+  if (updatedName.length < 3) return entity.name;
+
+  return updatedName;
+};
